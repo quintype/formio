@@ -37,7 +37,7 @@ RUN ln -sf $NPM_PACKAGES/node_modules node_modules
 # Set this to inspect more from the application. Examples:
 #   DEBUG=formio:db (see index.js for more)
 #   DEBUG=formio:*
-ENV DEBUG=""
+ENV DEBUG="formio:*"
 
 # This will initialize the application based on
 # some questions to the user (login email, password, etc.)
