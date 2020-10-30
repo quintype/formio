@@ -29,6 +29,8 @@ COPY ./package-lock.json $NPM_PACKAGES/
 # Use "Continuous Integration" to install as-is from package-lock.json
 RUN npm ci --prefix=$NPM_PACKAGES
 
+COPY . /app/
+
 # Link in the global install because `require()` only looks for ./node_modules
 # WARNING: This is overwritten by volume-mount at runtime!
 #          See docker-compose.yml for instructions
