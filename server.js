@@ -43,7 +43,7 @@ module.exports = function(options) {
   const app = options.app || express();
 
   // Use the given config.
-  const config = require('config') || options.config;
+  const config = options.config || require('config');
 
   // Configure nunjucks.
   nunjucks.configure('client', {
