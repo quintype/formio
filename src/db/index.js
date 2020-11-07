@@ -234,10 +234,7 @@ module.exports = function(formio) {
     if (!mongoConfig.hasOwnProperty('useNewUrlParser')) {
       mongoConfig.useNewUrlParser = true;
     }
-    if (config.mongoSA || config.mongoCA) {
-      mongoConfig.sslValidate = true;
-      mongoConfig.sslCA = config.mongoSA || config.mongoCA;
-    }
+
     if (config.mongoSSL) {
       mongoConfig = {
         ...mongoConfig,
@@ -246,10 +243,12 @@ module.exports = function(formio) {
     }
 
     mongoConfig.useUnifiedTopology = true;
-
+    mongoConfig.sslValidate = true;
+    mongoConfig.sslCA = [fs.readFileSync(config.mongoCA)];
     // Establish a connection and continue with execution.
     MongoClient.connect(dbUrl, mongoConfig, function(err, client) {
       if (err) {
+        console.log(err.stack);
         debug.db(`Connection Error: ${err}`);
         unlock(function() {
           throw new Error(`Could not connect to the given Database for server updates: ${dbUrl}.`);
