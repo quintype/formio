@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 const bodyParser = require('body-parser');
 const _ = require('lodash');
+const fs = require('fs');
 const events = require('events');
 const Q = require('q');
 const nunjucks = require('nunjucks');
@@ -207,13 +208,10 @@ module.exports = function(config) {
         mongoUrl = config.mongo.join(',');
         mongoConfig.mongos = true;
       }
-      if (config.mongoSA || config.mongoCA) {
-        mongoConfig.sslValidate = true;
-        mongoConfig.sslCA = config.mongoSA || config.mongoCA;
-      }
 
       mongoConfig.useUnifiedTopology = true;
       mongoConfig.useCreateIndex = true;
+      mongoConfig.sslCA = [fs.readFileSync(config.mongoCA)];
 
       if (config.mongoSSL) {
         mongoConfig = {

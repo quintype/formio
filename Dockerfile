@@ -31,9 +31,10 @@ COPY ./package.json $NPM_PACKAGES/
 COPY ./package-lock.json $NPM_PACKAGES/
 
 # Use "Continuous Integration" to install as-is from package-lock.json
-RUN npm ci --prefix=$NPM_PACKAGES
+#RUN npm ci --prefix=$NPM_PACKAGES
 
 COPY . /app/
+RUN npm install
 
 RUN mkdir -p /data/db
 # Link in the global install because `require()` only looks for ./node_modules
