@@ -114,9 +114,19 @@ module.exports = function(options) {
       install.extract = true;
     }
 
+    console.log("heyyyyyyyy---------------");
+    console.log(install);
+    console.log("noInstall");
+    console.log(noInstall);
+    console.log("client exists?");
+    console.log(fs.existsSync('client'));
+
     // See if they have any forms available.
     formio.db.collection('forms').estimatedDocumentCount(function(err, numForms) {
       // If there are forms, then go ahead and start the server.
+
+      console.log("numForms");
+      console.log(numForms);
       if ((!err && numForms > 0) || test || noInstall) {
         if (!install.download && !install.extract) {
           return start();

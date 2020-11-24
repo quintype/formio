@@ -6,9 +6,9 @@
   "allowedOrigins": ["*"],
   "domain": "http://localhost:3001",
   "basePath": "",
-  "mongo": "mongodb://localhost:27017/formioapp",
+  "mongo": "mongodb://qtadmin:fwaKqBIUcX9UrCRMLBxGW6e7@localhost:27018/test?ssl=true",
   "mongoConfig": "",
-  "mongoCA": "",
+  "mongoCA": "config/rds-combined-ca-bundle.pem",
   "mongoSecret": "--- change me now ---",
   "reservedForms": [
     "submission",
