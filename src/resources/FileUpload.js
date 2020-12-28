@@ -1,80 +1,73 @@
 "use strict";
 const crypto = require("crypto");
+const AWS = require("aws-sdk");
 
-const createHmacDigest = (key, string) => {
-  const hmac = crypto.createHmac("sha256", key);
-  hmac.write(string);
-  hmac.end();
-  return hmac.read();
+const SUCCESS_ACTION_STATUS = "201";
+const ACL = "public-read";
+
+const generatePolicy = (
+  fileName,
+  fileType,
+  AWSBucket,
+  expirationTimeout = 60
+) => {
+  const s3Policy = {
+    expiration: new Date(
+      new Date().getTime() + 1 * expirationTimeout * 1000
+    ).toISOString(),
+    conditions: [
+      ["starts-with", "$key", fileName],
+      {bucket: AWSBucket},
+      {acl: ACL},
+      ["starts-with", "$Content-Type", fileType],
+      {'success_action_status': SUCCESS_ACTION_STATUS},
+      {fileName},
+    ],
+  };
+  const stringPolicy = JSON.stringify(s3Policy);
+  const base64Policy = Buffer.from(stringPolicy, "utf-8").toString("base64");
+  return base64Policy;
 };
 
-const generateFileSignature = async (req, res) => {
-  const { name } = req.body;
+const generateSignature = (AWSSecretKey, policy) => {
+  return crypto
+    .createHmac("sha1", AWSSecretKey)
+    .update(Buffer.from(policy, "utf-8"))
+    .digest("base64");
+};
+
+const sign = async (req, res) => {
+  const {name, type} = req.body;
   const fileName = name;
+  const fileType = type;
+
+  // Get AWS credentials
+  const awsConfig = new AWS.Config();
 
   const config = {
     bucket: process.env.AWS_BUCKET,
-    region: process.env.AWS_REGION,
-    acl: "public-read",
-    accessKey: process.env.AWS_ACCESS_KEY_ID,
-    secretKey: process.env.AWS_SECRET_ACCESS_KEY,
-    "x-amz-algorithm": "AWS4-HMAC-SHA256",
-    successActionStatus: "201",
+    accessKey: awsConfig.credentials.accessKeyId,
+    secretKey: awsConfig.credentials.secretAccessKey,
   };
 
-  const uploadUrl = `https://${config.bucket}.s3.amazonaws.com`;
+  // Generate policy
+  const policy = generatePolicy(fileName, fileType, config.bucket);
 
-  const date = new Date().toISOString();
-
-  // create date string for the current date
-  const dateString = date.substr(0, 4) + date.substr(5, 2) + date.substr(8, 2);
-
-  // create upload credentials
-  const credential = `${config.accessKey}/${dateString}/${config.region}/s3/aws4_request`;
-
-  // create policy
-  const policy = {
-    expiration: new Date(new Date().getTime() + 1 * 60 * 1000).toISOString(), // to set the time after which upload will no longer be allowed using this policy
-    conditions: [
-      { bucket: config.bucket },
-      { key: fileName }, // fileName with which the uploaded file will be saved on s3
-      { acl: config.acl },
-      { success_action_status: config.successActionStatus },
-      ["content-length-range", 0, 1000000], // optional: to specify the minimum and maximum upload limit
-      { "x-amz-algorithm": config["x-amz-algorithm"] },
-      { "x-amz-credential": credential },
-      { "x-amz-date": `${dateString}T000000Z` },
-      { fileName },
-    ],
-  };
-
-  // base64 encode policy
-  const policyBase64 = new Buffer(JSON.stringify(policy)).toString("base64");
-
-  // create signature with policy, aws secret key & other scope information
-  const dateKey = createHmacDigest(`AWS4${config.secretKey}`, dateString);
-  const dateRegionKey = createHmacDigest(dateKey, config.region);
-  const dateRegionServiceKey = createHmacDigest(dateRegionKey, "s3");
-  const signingKey = createHmacDigest(dateRegionServiceKey, "aws4_request");
-
-  // sign policy document with the signing key to generate upload signature
-  const xAmzSignature = createHmacDigest(signingKey, policyBase64).toString(
-    "hex"
-  );
+  // Sign the base64 encoded policy
+  const signature = generateSignature(config.secretKey, policy);
 
   res.json({
-    url: uploadUrl,
+    url: `https://${config.bucket}.s3.amazonaws.com`,
     data: {
       key: "",
-      acl: config.acl,
-      success_action_status: config.successActionStatus,
-      policy: policyBase64,
-      "x-amz-algorithm": config["x-amz-algorithm"],
-      "x-amz-credential": credential,
-      "x-amz-date": `${dateString}T000000Z`,
-      "x-amz-signature": xAmzSignature,
+      acl: ACL,
+      'success_action_status': SUCCESS_ACTION_STATUS,
+      policy: policy,
+      AWSAccessKeyId: config.accessKey,
+      signature,
+      "Content-Type": fileType,
     },
   });
 };
 
-module.exports = generateFileSignature;
+module.exports = sign;

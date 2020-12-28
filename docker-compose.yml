@@ -43,6 +43,8 @@ services:
       NODE_CONFIG: '{"mongo": "mongodb://mongo:27017/formio"}'
       ROOT_EMAIL: admin@example.com
       ROOT_PASSWORD: CHANGEME
+      AWS_BUCKET: stg-quintype-dropbox
+      AWS_REGION: us-east-1
     stdin_open: true  # -i
     tty: true         # -t
 
