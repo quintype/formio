@@ -9,6 +9,7 @@ const generatePolicy = (
   fileName,
   fileType,
   AWSBucket,
+  key,
   expirationTimeout = 60
 ) => {
   const s3Policy = {
@@ -16,7 +17,7 @@ const generatePolicy = (
       new Date().getTime() + 1 * expirationTimeout * 1000
     ).toISOString(),
     conditions: [
-      ["starts-with", "$key", fileName],
+      ["starts-with", "$key", `${key}/${fileName}`],
       {bucket: AWSBucket},
       {acl: ACL},
       ["starts-with", "$Content-Type", fileType],
@@ -40,6 +41,7 @@ const sign = async (req, res) => {
   const {name, type} = req.body;
   const fileName = name;
   const fileType = type;
+  const key = req.hostname;
 
   // Get AWS credentials
   const awsConfig = new AWS.Config();
@@ -51,7 +53,7 @@ const sign = async (req, res) => {
   };
 
   // Generate policy
-  const policy = generatePolicy(fileName, fileType, config.bucket);
+  const policy = generatePolicy(fileName, fileType, config.bucket, key);
 
   // Sign the base64 encoded policy
   const signature = generateSignature(config.secretKey, policy);
@@ -59,7 +61,7 @@ const sign = async (req, res) => {
   res.json({
     url: `https://${config.bucket}.s3.amazonaws.com`,
     data: {
-      key: "",
+      key: key,
       acl: ACL,
       'success_action_status': SUCCESS_ACTION_STATUS,
       policy: policy,
