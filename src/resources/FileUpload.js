@@ -1,75 +1,58 @@
 "use strict";
-const crypto = require("crypto");
 const AWS = require("aws-sdk");
+const debug = {
+  error: require("debug")("formio:error")
+};
 
 const SUCCESS_ACTION_STATUS = "201";
 const ACL = "public-read";
 
-const generatePolicy = (
-  fileName,
-  fileType,
-  AWSBucket,
-  key,
-  expirationTimeout = 60
-) => {
-  const s3Policy = {
-    expiration: new Date(
-      new Date().getTime() + 1 * expirationTimeout * 1000
-    ).toISOString(),
-    conditions: [
-      ["starts-with", "$key", `${key}/${fileName}`],
-      {bucket: AWSBucket},
-      {acl: ACL},
-      ["starts-with", "$Content-Type", fileType],
-      {'success_action_status': SUCCESS_ACTION_STATUS},
-      {fileName},
-    ],
-  };
-  const stringPolicy = JSON.stringify(s3Policy);
-  const base64Policy = Buffer.from(stringPolicy, "utf-8").toString("base64");
-  return base64Policy;
-};
-
-const generateSignature = (AWSSecretKey, policy) => {
-  return crypto
-    .createHmac("sha1", AWSSecretKey)
-    .update(Buffer.from(policy, "utf-8"))
-    .digest("base64");
-};
-
 const sign = async (req, res) => {
-  const {name, type} = req.body;
-  const fileName = name;
-  const fileType = type;
-  const key = req.hostname;
+  try {
+    const { name, type } = req.body;
+    const fileName = name;
+    const fileType = type;
+    const key = req.hostname;
 
-  // Get AWS credentials
-  const awsConfig = new AWS.Config();
+    const s3 = new AWS.S3({ signatureVersion: "v4" });
 
-  const config = {
-    bucket: process.env.AWS_BUCKET,
-    accessKey: awsConfig.credentials.accessKeyId,
-    secretKey: awsConfig.credentials.secretAccessKey,
-  };
+    const signedFile = await new Promise((resolve, reject) => {
+      s3.createPresignedPost(
+        {
+          Bucket: process.env.AWS_BUCKET,
+          Fields: {
+            key: `${key}/${fileName}`,
+            acl: ACL,
+            "Content-Type": fileType,
+            success_action_status: SUCCESS_ACTION_STATUS,
+          },
+          Expires: 60,
+          Conditions: [
+            ["starts-with", "$key", `${key}/${fileName}`],
+            { bucket: process.env.AWS_BUCKET },
+            { acl: ACL },
+            ["starts-with", "$Content-Type", fileType],
+            { success_action_status: SUCCESS_ACTION_STATUS },
+            { fileName },
+          ],
+        },
+        (err, data) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(data);
+        }
+      );
+    });
 
-  // Generate policy
-  const policy = generatePolicy(fileName, fileType, config.bucket, key);
-
-  // Sign the base64 encoded policy
-  const signature = generateSignature(config.secretKey, policy);
-
-  res.json({
-    url: `https://${config.bucket}.s3.amazonaws.com`,
-    data: {
-      key: key,
-      acl: ACL,
-      'success_action_status': SUCCESS_ACTION_STATUS,
-      policy: policy,
-      AWSAccessKeyId: config.accessKey,
-      signature,
-      "Content-Type": fileType,
-    },
-  });
+    res.json({
+      url: signedFile.url,
+      data: { ...signedFile.fields, key }, // Replace key with only host name, since formio.js in client is appending file name and file path
+    });
+  } catch (err) {
+    debug.error(err);
+    res.status(500).json("Unable to upload file");
+  }
 };
 
 module.exports = sign;
