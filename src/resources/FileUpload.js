@@ -12,7 +12,7 @@ const sign = async (req, res) => {
     const { name, type } = req.body;
     const fileName = name;
     const fileType = type;
-    const key = req.hostname;
+    const key = `${req.hostname}`.replace(/\./g,'-');
 
     const s3 = new AWS.S3({ signatureVersion: "v4" });
 
