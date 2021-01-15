@@ -42,10 +42,7 @@ services:
       DEBUG: formio:*
       NODE_CONFIG: '{"mongo": "mongodb://mongo:27017/formio"}'
       ROOT_EMAIL: admin@example.com
-      ROOT_PASSWORD: admin
-      AWS_BUCKET: stg-quintype-dropbox
-      AWS_REGION: us-east-1
-      API_KEYS: abcdef
+      ROOT_PASSWORD: CHANGEME
     stdin_open: true  # -i
     tty: true         # -t
 
