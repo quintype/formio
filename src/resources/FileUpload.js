@@ -14,7 +14,9 @@ const sign = async (req, res) => {
     const fileName = name;
     const fileType = type;
     const key = `${req.hostname}`.replace(/\./g,'-');
+
     const s3 = new AWS.S3({ signatureVersion: "v4" });
+
     let bucketName, region;
     try {
       bucketName = FormioConfig.settings.fileUpload.aws.bucket;
