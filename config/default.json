@@ -6,7 +6,7 @@
   "allowedOrigins": ["*"],
   "domain": "http://localhost:12001",
   "basePath": "",
-  "mongo": "mongodb://localhost:27017/formioapp",
+  "mongo": "mongodb://localhost:27017/formioapp-20",
   "mongoConfig": "",
   "mongoCA": "",
   "mongoSecret": "--- change me now ---",
@@ -65,7 +65,7 @@
       },
       "sendgrid": {
         "auth": {
-          "api_user": "",
+          "api_user": "apikey",
           "api_key": ""
         }
       },
@@ -73,6 +73,12 @@
         "auth": {
           "apiKey": ""
         }
+      }
+    },
+    "fileUpload": {
+      "aws": {
+        "bucket": "stg-quintype-dropbox",
+        "region": "us-east-1"
       }
     }
   }

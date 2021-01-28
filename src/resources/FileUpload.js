@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const debug = {
   error: require("debug")("formio:error")
 };
+const FormioConfig = require('../../config/default.json');
 
 const SUCCESS_ACTION_STATUS = "201";
 const ACL = "public-read";
@@ -13,13 +14,18 @@ const sign = async (req, res) => {
     const fileName = name;
     const fileType = type;
     const key = `${req.hostname}`.replace(/\./g,'-');
-
     const s3 = new AWS.S3({ signatureVersion: "v4" });
-
+    let bucketName, region;
+    try {
+      bucketName = FormioConfig.settings.fileUpload.aws.bucket;
+      region = FormioConfig.settings.fileUpload.aws.region;
+    } catch(error) {
+      throw "Unable to get AWS bucket name or region";
+    }
     const signedFile = await new Promise((resolve, reject) => {
       s3.createPresignedPost(
         {
-          Bucket: process.env.AWS_BUCKET,
+          Bucket: bucketName,
           Fields: {
             key: `${key}/${fileName}`,
             acl: ACL,
@@ -29,7 +35,7 @@ const sign = async (req, res) => {
           Expires: 60,
           Conditions: [
             ["starts-with", "$key", `${key}/${fileName}`],
-            { bucket: process.env.AWS_BUCKET },
+            { bucket: bucketName },
             { acl: ACL },
             ["starts-with", "$Content-Type", fileType],
             { success_action_status: SUCCESS_ACTION_STATUS },
