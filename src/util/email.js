@@ -249,7 +249,7 @@ module.exports = (formio) => {
     // Get the transport for this context.
     let emailType = message.transport
       ? message.transport
-      : 'default';
+      : formio.config.email.defaultProvider ;
 
     const _config = (formio && formio.config && formio.config.email && formio.config.email.type);
     debug.send(message);
