@@ -247,7 +247,7 @@ module.exports = (formio) => {
     params.settings = message;
 
     // Get the transport for this context.
-    let emailType = message.transport
+    let emailType = message.transport && message.transport !== 'default'
       ? message.transport
       : formio.config.email.defaultProvider ;
 

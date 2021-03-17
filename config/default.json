@@ -28,7 +28,10 @@
     "expireTime": 240
   },
   "email": {
-    "defaultProvider": "sendgrid"
+    "defaultProvider": "sendgrid",
+    "templates": {
+      "formSubmission": "config/templates/formio_submission_email.html"
+    }
   },
   "settings": {
     "office365": {

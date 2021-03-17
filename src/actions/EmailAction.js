@@ -1,17 +1,8 @@
 'use strict';
+const fs = require('fs');
 const fetch = require('../util/fetch');
 
 const LOG_EVENT = 'Email Action';
-
-const isValidHttpUrl = (string) => {
-  let url;
-  try {
-    url = new URL(string);
-  } catch (err) {
-    return false;  
-  }
-  return url.protocol === "http:" || url.protocol === "https:";
-}
 
 module.exports = (router) => {
   const Action = router.formio.Action;
@@ -212,24 +203,13 @@ module.exports = (router) => {
                 if (owner) {
                   params.owner = owner;
                 }
-
-                if (!this.settings.template) {
+                params.content = this.settings.message;
+                try {
+                  const templateFilePath = router.formio.config.email.templates.formSubmission;
+                  const template = fs.readFileSync(templateFilePath, 'utf8');
+                  return template;
+                } catch(err) {
                   return this.settings.message;
-                }
-                if (isValidHttpUrl(this.settings.template)) {
-                  return fetch(this.settings.template)
-                  .then((response) => response.ok ? response.text() : null)
-                  .then((body) => {
-                    if (body) {
-                      // Save the content before overwriting the message.
-                      params.content = this.settings.message;
-                    }
-                    return body || this.settings.message;
-                  })
-                  .catch(() => this.settings.message);
-                } else {
-                  params.content = this.settings.message;
-                  return this.settings.template;
                 }
               })
               .then((template) => {
