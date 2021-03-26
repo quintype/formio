@@ -41,7 +41,6 @@ COPY . /app
 # Set this to inspect more from the application. Examples:
 #   DEBUG=formio:db (see index.js for more)
 #   DEBUG=formio:*
-ENV DEBUG=""
 
 # This will initialize the application based on
 # some questions to the user (login email, password, etc.)
