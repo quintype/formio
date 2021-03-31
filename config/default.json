@@ -67,7 +67,7 @@
       "sendgrid": {
         "auth": {
           "api_user": "apikey",
-          "api_key": ""
+          "api_key": "<your sendgrid key>"
         }
       },
       "mandrill": {
