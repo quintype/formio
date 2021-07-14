@@ -14,10 +14,13 @@ const sign = async (req, res) => {
     const fileName = name;
     const fileType = type;
     const key = `${req.hostname}`.replace(/\./g,'-');
+    const {bucket: bucketName, region} = config.settings.fileUpload.aws;
+    let s3Configuration =  { signatureVersion: "v4"};
+    if (region) {
+      s3Configuration.region = region;
+    }
+    const s3 = new AWS.S3(s3Configuration);
 
-    const s3 = new AWS.S3({ signatureVersion: "v4" });
-
-    const bucketName = config.settings.fileUpload.aws.bucket;
     const signedFile = await new Promise((resolve, reject) => {
       s3.createPresignedPost(
         {
