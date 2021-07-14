@@ -78,7 +78,8 @@
     },
     "fileUpload": {
       "aws": {
-        "bucket": "stg-quintype-dropbox"
+        "bucket": "stg-quintype-dropbox",
+        "region": "us-east-1"
       }
     }
   }
