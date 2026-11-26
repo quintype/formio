@@ -52,7 +52,7 @@
     "mssql": "^6.2.3",
     "mysql": "^2.18.1",
     "node-fetch": "^2.6.1",
-    "nodemailer": "^6.4.14",
+    "nodemailer": "^10.1.4",
     "nodemailer-mailgun-transport": "^2.0.1",
     "nodemailer-mandrill-transport": "^1.2.0",
     "nodemailer-sendgrid-transport": "^0.2.0",
